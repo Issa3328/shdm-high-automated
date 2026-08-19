@@ -290,7 +290,7 @@ function PrivacyScreen({ catVal, setCatVal, subVal, setSubVal, itemVal, setItemV
     const prev = state[key]; const next = prev === val ? null : val;
     // Automated: every change is an override
     tracker.override();
-    setState(s => ({ ...s, [key]: next })); setSaved(false);
+    setState(s => ({ ...s, [key]: next }));
     logEvent({ session_id: sessionId, flow: FLOW, event_type: "override", item: key, value: next, task: activeTask?.id || null, client_timestamp: new Date().toISOString() });
   }
   function expand(key, depth) {
@@ -556,7 +556,7 @@ export default function App() {
 
   function startTask(task) {
     if (completed.includes(task.id)) return;
-    setSaved(false);
+   
     if (task.id === "task2") {
       setCatVal({ homeSensors: "deny", behaviorPatterns: "deny", purchaseHistory: "deny" });
       setSubVal({}); setItemVal({});
