@@ -276,7 +276,7 @@ function XCheck({ value, onDeny, onAllow }) {
   );
 }
 
-function PrivacyScreen({ catVal, setCatVal, subVal, setSubVal, itemVal, setItemVal, usgVal, setUsgVal, onBack, onDone, activeTask, onTaskComplete, sessionId, tracker, saved, setSaved }) {
+function PrivacyScreen({ catVal, setCatVal, subVal, setSubVal, itemVal, setItemVal, usgVal, setUsgVal, onBack, onDone, activeTask, onTaskComplete, sessionId, tracker }) {
   useEffect(() => {
     const t0 = Date.now();
     logEvent({ session_id: sessionId, flow: FLOW, event_type: "page_enter", page: "privacy_settings", task: activeTask?.id || null, client_timestamp: new Date().toISOString() });
@@ -303,9 +303,7 @@ function PrivacyScreen({ catVal, setCatVal, subVal, setSubVal, itemVal, setItemV
     tracker.click(); setTab(t);
     logEvent({ session_id: sessionId, flow: FLOW, event_type: "tab_switch", from: tab, to: t, task: activeTask?.id || null, client_timestamp: new Date().toISOString() });
   }
-  function handleSave() { tracker.click(); setSaved(true); logEvent({ session_id: sessionId, flow: FLOW, event_type: "click", element: "save_my_choices", task: activeTask?.id || null, client_timestamp: new Date().toISOString() }); }
   function handleDone() {
-    if (!saved && activeTask && ["task2","task3"].includes(activeTask.id)) { tracker.error(); logEvent({ session_id: sessionId, flow: FLOW, event_type: "error", element: "done_without_saving", task: activeTask.id, client_timestamp: new Date().toISOString() }); }
     tracker.click(); onDone();
   }
 
@@ -549,7 +547,6 @@ export default function App() {
   const [activeTask,     setActiveTask]     = useState(null);
   const [completed,      setCompleted]      = useState([]);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
-  const [saved,          setSaved]          = useState(false);
 
   // Automated: all allow
   const [catVal,  setCatVal]  = useState({ ...DEFAULT_CAT });
@@ -587,7 +584,7 @@ export default function App() {
       <style>{CSS}</style>
       <div className="app">
         <TaskSidebar completed={completed} active={activeTask} onSelect={startTask} />
-        {screen === "privacy"  && <PrivacyScreen catVal={catVal} setCatVal={setCatVal} subVal={subVal} setSubVal={setSubVal} itemVal={itemVal} setItemVal={setItemVal} usgVal={usgVal} setUsgVal={setUsgVal} onBack={() => setScreen("privacy")} onDone={() => setScreen("offers")} activeTask={activeTask} onTaskComplete={handleTaskComplete} sessionId={sessionId} tracker={tracker} saved={saved} setSaved={setSaved} />}
+        {screen === "privacy"  && <PrivacyScreen catVal={catVal} setCatVal={setCatVal} subVal={subVal} setSubVal={setSubVal} itemVal={itemVal} setItemVal={setItemVal} usgVal={usgVal} setUsgVal={setUsgVal} onBack={() => setScreen("privacy")} onDone={() => setScreen("offers")} activeTask={activeTask} onTaskComplete={handleTaskComplete} sessionId={sessionId} tracker={tracker} />}
         {screen === "offers"   && <OffersScreen  onSelect={o => { setOffer(o); setScreen("order"); }} onBack={() => setScreen("privacy")} activeTask={activeTask} onTaskComplete={handleTaskComplete} sessionId={sessionId} tracker={tracker} />}
         {screen === "order"    && <OrderScreen   offer={offer || OFFERS[0]} onPlace={() => setScreen("confirm")} onBack={() => setScreen("offers")} activeTask={activeTask} onTaskComplete={handleTaskComplete} sessionId={sessionId} tracker={tracker} setOrderConfirmed={setOrderConfirmed} />}
         {screen === "confirm"  && <ConfirmScreen onHome={() => setScreen("privacy")} activeTask={activeTask} onTaskComplete={handleTaskComplete} />}
