@@ -1,7 +1,5 @@
-"use client";
 import { useState, useEffect, useRef } from "react";
 
-// ─── INLINE SVG ICONS (lucide-react 0.487 paths, like Figma — no dependency) ─
 const Svg = ({ className, style, children, ...p }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} style={style} {...p}>{children}</svg>
 );
@@ -24,17 +22,14 @@ const ZapIcon       = (p) => <Svg {...p}><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-1
 const SettingsIcon  = (p) => <Svg {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Svg>;
 const CheckCircle   = (p) => <Svg {...p}><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></Svg>;
 
-// ─── CONFIG ───────────────────────────────────────────────────────────────────
 const SUPABASE_URL      = "https://iljzwxwopxuzpgkjivmn.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_KEoCJtCLyGTJjqB1phGy2Q_v3PftUYH";
 const FLOW              = "high_automated";
 const MODE_LABEL        = "Info: High · Control: Automated";
-const VISIBILITY        = "high";   // low | medium | high
-const AUTOMATION        = "automated";   // manual | assisted | automated
+const VISIBILITY        = "high";
+const AUTOMATION        = "automated";
 
-// ─── TAILWIND (v4, same version + theme as the Figma prototype) ───────────────
 if (typeof document !== "undefined" && !document.getElementById("tailwind-cdn")) {
-  // Figma theme: radius 0.625rem + base typography (identical to Figma's globals.css)
   const tw = document.createElement("style");
   tw.id = "tailwind-theme";
   tw.setAttribute("type", "text/tailwindcss");
@@ -49,7 +44,6 @@ if (typeof document !== "undefined" && !document.getElementById("tailwind-cdn"))
   * { border-color: rgba(0, 0, 0, 0.1); outline-color: color-mix(in oklab, oklch(0.708 0 0) 50%, transparent); }
   body { background: #ffffff; color: oklch(0.145 0 0); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 }
-/* Base typography — not applied to elements which have an ancestor with a Tailwind text class */
 @layer base {
   :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
     h1 { font-size: var(--text-2xl); font-weight: 500; line-height: 1.5; }
@@ -69,7 +63,6 @@ html { font-size: 16px; }
   document.head.appendChild(s);
 }
 
-// ─── CSS (only for the study task sidebar — not part of the Figma design) ─────
 if (typeof document !== "undefined" && !document.getElementById("hm-styles")) {
   const st = document.createElement("style");
   st.id = "hm-styles";
@@ -78,7 +71,6 @@ if (typeof document !== "undefined" && !document.getElementById("hm-styles")) {
 body { margin: 0; min-height: 100vh; }
 .app { display: flex; min-height: 100vh; }
 
-/* ── Sidebar ── */
 .sidebar { width: 220px; flex-shrink: 0; background: #fff; border-right: 1px solid #e4e6ef; padding: 20px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
 .sidebar-title { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; padding: 0 16px 12px; }
 .task-lbl { font-size: 12px; font-weight: 600; color: #111827; }
@@ -87,7 +79,6 @@ body { margin: 0; min-height: 100vh; }
   document.head.appendChild(st);
 }
 
-// ─── DATA ─────────────────────────────────────────────────────────────────────
 const ACQ_CATS = [
   {
     id:"sensors", label:"Home Sensors", sensitivity:"medium", icon:"🏠",
@@ -180,7 +171,6 @@ const PROC_CATS = [
   },
 ];
 
-// AUTOMATED: system enables everything — user reviews (can customize)
 const DEFAULT_ACQ  = { sensors:true, behavior:true, purchases:true };
 const DEFAULT_PROC = { food:true, home:true, wellness:true };
 
@@ -225,37 +215,19 @@ const TASKS = [
     desc:"Review the order summary based on the offer you selected. When you are ready, confirm your order to place it." },
 ];
 
-// ═══ STUDY TRACKING ═══ identical in all 9 conditions (only VISIBILITY / AUTOMATION differ) ═══
-// Tables (create once with study_supabase_setup.sql):
-//   study_events          → one row per interaction
-//   study_task_summaries  → exactly one row per task (1–4) per visit
-// IDs:
-//   participant_id → the SurveyMonkey ID from the URL (?session=…); use it to match survey + website data
-//   session_id     → random ID of this visit (new tab = new visit)
-// Counting rules (same everywhere):
-//   clicks    → every click on a control (buttons, tabs, toggles, expand arrows, back links)
-//   overrides → a click that contradicts a system choice (never in Manual):
-//               • setting a privacy category to the opposite of the system's pre-selection
-//               • choosing an offer that is not the system's highlighted/selected offer of its tab
-//   errors    → backward navigation (Back / Return to Home) and clicks on disabled controls
-// Every click belongs to the current (lowest unfinished) task. Task n+1 starts when task n finishes.
-const EVENTS_TABLE = "study_events";
-const TASKS_TABLE  = "study_task_summaries";
-
-function sbInsert(table, row) {
+function studyLog(payload) {
   try {
-    fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/study_log`, {
       method: "POST",
-      keepalive: true, // still delivered when the page redirects to SurveyMonkey
+      keepalive: true,
       headers: {
         "Content-Type": "application/json",
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        Prefer: "return=minimal",
       },
-      body: JSON.stringify(row),
+      body: JSON.stringify({ p: payload }),
     })
-      .then(r => { if (!r.ok) console.warn(`[study] insert into ${table} failed (${r.status})`); })
+      .then(r => { if (!r.ok) console.warn(`[study] saving failed (${r.status})`); })
       .catch(() => {});
   } catch {}
 }
@@ -270,57 +242,43 @@ function makeId(len = 10) {
   }
 }
 
-// SurveyMonkey ID from ?session=… (also accepts ?pid=…); kept for this tab so a reload cannot lose it
 function resolveParticipant() {
   const KEY = "shdm_participant_id";
   const clean = v => (v || "").trim().replace(/^\[|\]$/g, "");
   let id = "", source = "url";
   try { const p = new URLSearchParams(window.location.search); id = clean(p.get("session") || p.get("pid")); } catch {}
   if (!id) { source = "storage"; try { id = clean(sessionStorage.getItem(KEY)); } catch {} }
-  if (!id) { source = "missing"; id = "unknown"; }
-  else { try { sessionStorage.setItem(KEY, id); } catch {} }
+  if (!id) { source = "missing"; id = "unknown-" + makeId(8); }
+  try { sessionStorage.setItem(KEY, id); } catch {}
   return { id, source };
-}
-
-function resolveVisit() {
-  const KEY = `shdm_visit_${FLOW}`;
-  try {
-    let v = sessionStorage.getItem(KEY);
-    if (!v) { v = makeId(12); sessionStorage.setItem(KEY, v); }
-    return v;
-  } catch { return makeId(12); }
 }
 
 function createStudyTracker() {
   const participant = resolveParticipant();
-  const sessionId   = resolveVisit();
   const tasks = {};
   [1, 2, 3, 4].forEach(n => { tasks[n] = { start: null, clicks: 0, overrides: 0, errors: 0, done: false }; });
   let current = 1;
   tasks[1].start = Date.now();
 
-  const base = () => ({
-    participant_id: participant.id, session_id: sessionId, flow: FLOW,
-    visibility: VISIBILITY, automation: AUTOMATION, client_timestamp: new Date().toISOString(),
+  const send = (ev, summary) => studyLog({
+    session: participant.id, flow: FLOW, visibility: VISIBILITY, automation: AUTOMATION,
+    event: { time: new Date().toISOString(), ...ev }, ...(summary ? { summary } : {}),
   });
 
   const t = {
     participantId: participant.id,
     participantSource: participant.source,
-    sessionId,
-    get current() { return current; },          // 1–4, or 5 when all tasks are done
+    get current() { return current; },
     isDone: n => !!tasks[n] && tasks[n].done,
 
-    // log without counting (page views, system events)
     event(event, f = {}) {
-      sbInsert(EVENTS_TABLE, {
-        ...base(), task: current <= 4 ? current : null, event,
+      send({
+        task: current <= 4 ? current : null, event,
         page: f.page ?? null, target: f.target ?? null, value: f.value ?? null,
-        is_override: !!f.override, is_error: !!f.error, details: f.details ?? null,
+        override: !!f.override, error: !!f.error, ...(f.details ? { details: f.details } : {}),
       });
     },
 
-    // every user click on a control goes through here → counted for the current task + logged
     action(event, f = {}) {
       if (current <= 4) {
         const k = tasks[current];
@@ -331,19 +289,19 @@ function createStudyTracker() {
       t.event(event, f);
     },
 
-    // finish task n (and any earlier unfinished task); returns finished task indices (0-based, for the sidebar)
     complete(n, via, extra = {}) {
       const finished = [];
       while (current <= n && current <= 4) {
         const k = tasks[current];
-        sbInsert(TASKS_TABLE, {
-          ...base(), task: current,
+        const summary = {
+          task: current,
           completed_via: current === n ? via : "auto_" + via,
           time_ms: Date.now() - k.start,
           clicks: k.clicks, overrides: k.overrides, errors: k.errors,
-          offer_selected: current === n ? (extra.offer ?? null) : null,
+          offer: current === n ? (extra.offer ?? null) : null,
           order_placed: current === n ? !!extra.orderPlaced : false,
-        });
+        };
+        send({ task: current, event: "task_complete", value: summary.completed_via }, summary);
         k.done = true;
         finished.push(current - 1);
         current++;
@@ -355,21 +313,16 @@ function createStudyTracker() {
   return t;
 }
 
-// override rules (shared)
-// consent: override = changing a category to the opposite of the system's pre-selection (Assisted/Automated only)
 function isConsentOverride(group, id, newValue, currentValue) {
   if (AUTOMATION === "manual" || newValue === currentValue) return false;
   const systemDefault = !!(group === "acquisition" ? DEFAULT_ACQ : DEFAULT_PROC)[id];
   return newValue !== systemDefault;
 }
-// offer: override = choosing an offer that is not the system's highlighted/selected offer of its tab (Assisted/Automated only)
 function isOfferOverride(offer, offersOfTab) {
   if (AUTOMATION === "manual") return false;
   return offer.matchScore < Math.max(...offersOfTab.map(o => o.matchScore));
 }
-// ═══ END STUDY TRACKING ═══
 
-// ─── ORDER HELPERS (display texts — identical to Figma) ───────────────────────
 function getOrderDetails(offer) {
   if (!offer) return {};
   if (offer.cat === "Food") return {
@@ -404,7 +357,6 @@ const sensitivityColor = (level) => {
   return "bg-green-100 text-green-700 border-green-200";
 };
 
-// ─── TASK SIDEBAR ─────────────────────────────────────────────────────────────
 function TaskSidebar({ doneTasks, currentTask }) {
   return (
     <div className="sidebar">
@@ -438,7 +390,6 @@ function TaskSidebar({ doneTasks, currentTask }) {
   );
 }
 
-// ─── TASK BAR (dark indigo strip above content) ───────────────────────────────
 function TaskBar({ sidebarVisible, currentTask }) {
   if (!sidebarVisible || currentTask >= TASKS.length) return null;
   const t = TASKS[currentTask];
@@ -450,8 +401,6 @@ function TaskBar({ sidebarVisible, currentTask }) {
   );
 }
 
-
-// ─── MODE BADGE ───────────────────────────────────────────────────────────────
 function ModeBadge() {
   return (
     <div className="fixed top-3 right-3 z-50">
@@ -462,17 +411,13 @@ function ModeBadge() {
   );
 }
 
-// ─── CONSENT CATEGORY BLOCK ───────────────────────────────────────────────────
-// parentEnabled: whether the top-level toggle is Allow (true) or Deny (false)
-// For subcategory interactivity: only enabled when parentEnabled === true
 function ConsentCatBlock({ cat, enabled, onToggle, onAction, isProc, readOnly }) {
   const [expanded,    setExpanded]    = useState(false);
   const [expandedSub, setExpandedSub] = useState({});
-  // Per-subgroup state (local, for visual feedback) — only matters when parent is enabled
   const [sgState, setSgState] = useState(() => {
     const init = {};
     (cat.subgroups || []).forEach(sg => {
-      init[sg.id] = false; // start denied
+      init[sg.id] = false;
       sg.items.forEach(item => { init[`${sg.id}__${item}`] = false; });
     });
     return init;
@@ -507,7 +452,6 @@ function ConsentCatBlock({ cat, enabled, onToggle, onAction, isProc, readOnly })
   return (
     <div className="border-2 border-gray-200 rounded-lg bg-gradient-to-br from-white to-gray-50">
       <div className="p-4">
-        {/* Main header row */}
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-start gap-3 flex-1">
             {!readOnly && (
@@ -556,7 +500,6 @@ function ConsentCatBlock({ cat, enabled, onToggle, onAction, isProc, readOnly })
           </div>
         </div>
 
-        {/* Subgroups — only shown when expanded */}
         {expanded && !readOnly && cat.subgroups?.length > 0 && (
           <div className={`mt-3 pl-8 space-y-2 pt-3 border-t-2 ${isProc ? "border-purple-200" : "border-blue-200"}`}>
             {cat.subgroups.map(sg => {
@@ -601,7 +544,6 @@ function ConsentCatBlock({ cat, enabled, onToggle, onAction, isProc, readOnly })
   );
 }
 
-// ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 function HomeScreen({ onConsent, tracker }) {
   const sensorWidget = (label, value, icon, sub) => (
     <div className="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm">
@@ -615,7 +557,6 @@ function HomeScreen({ onConsent, tracker }) {
   return (
     <div className="flex-1 p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="max-w-2xl mx-auto pt-10">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-200 shadow-lg rounded-full mb-4">
             <HomeIcon className="w-9 h-9 text-blue-700"/>
@@ -624,7 +565,6 @@ function HomeScreen({ onConsent, tracker }) {
           <p className="text-gray-600 text-sm">Wednesday, 7:15 PM</p>
         </div>
 
-        {/* Live sensor dashboard */}
         <div className="bg-white border-2 border-gray-200 rounded-xl p-6 mb-5 shadow-lg">
           <p className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
             <ActivityIcon className="w-4 h-4 text-blue-600"/> Live Sensor Dashboard
@@ -643,7 +583,6 @@ function HomeScreen({ onConsent, tracker }) {
           </div>
         </div>
 
-        {/* Main card with action */}
         <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg mb-5">
           <div className="mb-5 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl p-4">
             <div className="flex items-start gap-3">
@@ -676,7 +615,6 @@ function HomeScreen({ onConsent, tracker }) {
           </button>
         </div>
 
-        {/* How it works */}
         <div className="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm">
           <p className="text-sm font-bold text-gray-700 mb-3">How Your Smart Home Learns</p>
           <div className="grid grid-cols-3 gap-3 text-center text-xs">
@@ -698,10 +636,9 @@ function HomeScreen({ onConsent, tracker }) {
   );
 }
 
-// ─── CONSENT SCREEN ───────────────────────────────────────────────────────────
 function ConsentScreen({ acq, setAcq, proc, setProc, onDone, currentTask, tracker, saved, setSaved, syncTasks }) {
   const [tab, setTab] = useState(currentTask === 1 ? "processing" : "acquisition");
-  const [customizing, setCustomizing] = useState(false); // review-only until user clicks "Customize"
+  const [customizing, setCustomizing] = useState(false);
   const readOnly = !customizing;
 
   function handleCustomize() {
@@ -723,7 +660,6 @@ function ConsentScreen({ acq, setAcq, proc, setProc, onDone, currentTask, tracke
     if (!tracker.isDone(n)) syncTasks(tracker.complete(n, "apply"));
   }
 
-  // leaving the privacy settings completes Task 1 + 2 (if not done yet)
   function handleDone() {
     tracker.action("consent_done", { page:"consent", details:{ acquisition:acq, processing:proc } });
     if (!tracker.isDone(2)) syncTasks(tracker.complete(2, "continue"));
@@ -750,7 +686,6 @@ function ConsentScreen({ acq, setAcq, proc, setProc, onDone, currentTask, tracke
   return (
     <div className="flex-1 bg-gradient-to-br from-gray-50 to-blue-50 p-4 pt-8">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="mb-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl p-5">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
@@ -792,7 +727,6 @@ function ConsentScreen({ acq, setAcq, proc, setProc, onDone, currentTask, tracke
         </div>
 
         <div className="bg-white border-2 border-gray-200 rounded-xl shadow-xl overflow-hidden">
-          {/* Tabs */}
           <div className="border-b border-gray-200 flex">
             {["acquisition","processing"].map(t => (
               <button
@@ -865,7 +799,6 @@ function ConsentScreen({ acq, setAcq, proc, setProc, onDone, currentTask, tracke
   );
 }
 
-// ─── OFFERS SCREEN ────────────────────────────────────────────────────────────
 function OfferCard({ offer, topScore, onClick }) {
   const isTop = offer.matchScore === topScore;
   const orig  = parseFloat((offer.orig||"$0").replace("$",""));
@@ -927,7 +860,6 @@ function OffersScreen({ onSelect, onBack, tracker }) {
 
   const catOffers   = ALL_OFFERS.filter(o => o.cat === tab);
   const topScore    = Math.max(...catOffers.map(o => o.matchScore));
-  // System's selection = highest match score in the active category
   const preSelected = catOffers.reduce((best, o) => o.matchScore > best.matchScore ? o : best, catOffers[0]);
 
   function selectOffer(offer) {
@@ -941,7 +873,6 @@ function OffersScreen({ onSelect, onBack, tracker }) {
           ← Back to Home
         </button>
 
-        {/* System selection banner */}
         <div className="mb-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl p-5 shadow-lg">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -972,7 +903,6 @@ function OffersScreen({ onSelect, onBack, tracker }) {
             ))}
           </div>
           <div className="p-6">
-            {/* Pre-selected hero */}
             <div className="mb-4 p-5 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-xl">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-800">⚡ System's Selection</span>
@@ -1000,7 +930,6 @@ function OffersScreen({ onSelect, onBack, tracker }) {
               </button>
             </div>
 
-            {/* See alternatives toggle */}
             <button
               onClick={() => { tracker.action("alternatives_toggle", { page:"offers", value: showAlternatives ? "hide" : "show", details:{ tab } }); setShowAlternatives(v => !v); }}
               className="w-full text-sm text-gray-500 hover:text-blue-600 py-2 transition-colors flex items-center justify-center gap-1">
@@ -1021,7 +950,6 @@ function OffersScreen({ onSelect, onBack, tracker }) {
   );
 }
 
-// ─── ORDER SCREEN ─────────────────────────────────────────────────────────────
 function OrderScreen({ offer, onPlace, onBack, tracker }) {
   const meta = getOrderDetails(offer);
   const orig = parseFloat((offer.orig||"$0").replace("$",""));
@@ -1155,7 +1083,6 @@ function OrderScreen({ offer, onPlace, onBack, tracker }) {
   );
 }
 
-// ─── COMPLETE SCREEN ──────────────────────────────────────────────────────────
 function CompleteScreen({ orderNum, offer }) {
   const orig    = parseFloat((offer?.orig||"$0").replace("$",""));
   const curr    = parseFloat((offer?.price||"$0").replace("$",""));
@@ -1209,7 +1136,6 @@ function CompleteScreen({ orderNum, offer }) {
   );
 }
 
-// ─── ANALYZING SCREEN ─────────────────────────────────────────────────────────
 function AnalyzingScreen() {
   const items = ["Privacy settings applied", "Kitchen sensors checked (no cooking)", "Presence analyzed (2 people)", "Top offers curated for you"];
   return (
@@ -1242,7 +1168,6 @@ function AnalyzingScreen() {
   );
 }
 
-// ─── APP ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const trackerRef = useRef(null);
   if (!trackerRef.current) trackerRef.current = createStudyTracker();
@@ -1258,14 +1183,12 @@ export default function App() {
   const [currentTask,   setCurrentTask]  = useState(0);
   const [doneTasks,     setDoneTasks]    = useState([]);
 
-  // sidebar/task bar follow the tracker (single source of truth)
   const syncTasks = (finished) => {
     if (!finished.length) return;
     setDoneTasks(prev => Array.from(new Set([...prev, ...finished])));
     setCurrentTask(tracker.current - 1);
   };
 
-  // visit start (once)
   useEffect(() => {
     tracker.event("session_start", { details: {
       participant_source: tracker.participantSource,
@@ -1274,19 +1197,17 @@ export default function App() {
     } });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // task sidebar appears after 5 seconds
   useEffect(() => {
     const t = setTimeout(() => { setSidebarVisible(true); tracker.event("tasks_shown"); }, 5000);
     return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // every screen change
   useEffect(() => { tracker.event("page_view", { page: stage }); }, [stage]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function goConsent() {            // click is logged in HomeScreen
+  function goConsent() {
     setStage("consent");
   }
-  function goOffers() {             // click + task completion are logged in ConsentScreen
+  function goOffers() {
     setStage("analyzing");
     setTimeout(() => setStage("offers"), 1500);
   }
@@ -1299,13 +1220,12 @@ export default function App() {
     setStage("order");
   }
   function handlePlaceOrder() {
-    if (tracker.isDone(4)) return; // ignore double clicks
+    if (tracker.isDone(4)) return;
     const num = `SH-${Math.floor(Math.random() * 90000) + 10000}`;
     tracker.action("order_place", { page:"order", target:selectedOffer?.name, details:{ order_num:num } });
     syncTasks(tracker.complete(4, "order_place", { offer:selectedOffer?.name, orderPlaced:true }));
     setOrderNum(num);
     setStage("complete");
-    // participant returns to the SurveyMonkey tab (still open) for the remaining questions
     tracker.event("study_finished", { page:"complete" });
   }
 
